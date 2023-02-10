@@ -50,6 +50,63 @@
                                        message:errorDescription
                                        details:nil]);
         }];
+    }
+    else if ([@"formattedAddressFromCoordinates" isEqualToString:call.method]) {
+        CLLocationDegrees latitude = ((NSNumber *) call.arguments[@"latitude"]).doubleValue;
+        CLLocationDegrees longitude = ((NSNumber *) call.arguments[@"longitude"]).doubleValue;
+        CLLocation* location = [[CLLocation alloc] initWithLatitude:latitude
+                                                          longitude:longitude];
+        
+        GeocodingHandler* handler = [[GeocodingHandler alloc] init];
+        [handler geocodeToAddress:location
+                           locale:[GeocodingPlugin parseLocale: call.arguments]
+                          success:^(NSArray<CLPlacemark *> * placemarks) {
+            
+
+                            if (placemarks.count > 0) {
+                                CLPlacemark* pm = placemarks.firstObject;
+                                
+                                NSString* addressString = @"";
+                                if (placemarks[0].subLocality != nil) {
+                                    addressString = [NSString stringWithFormat:@"%@%@", addressString, pm.subLocality];
+                                    addressString = [NSString stringWithFormat:@"%@%s", addressString, ", "];
+//                                    addressString = addressString. + pm.subLocality;! + ", ";
+                                }
+                                if (placemarks[0].thoroughfare != nil) {
+                                    addressString = [NSString stringWithFormat:@"%@%@", addressString, pm.thoroughfare];
+                                    addressString = [NSString stringWithFormat:@"%@%s", addressString, ", "];
+                                }
+                                if (pm.locality != nil) {
+                                    addressString = [NSString stringWithFormat:@"%@%@", addressString, pm.locality];
+                                    addressString = [NSString stringWithFormat:@"%@%s", addressString, ", "];
+//                                    addressString = addressString + pm.locality! + ", "
+                                }
+                                if (pm.country != nil) {
+                                    addressString = [NSString stringWithFormat:@"%@%@", addressString, pm.country];
+                                    addressString = [NSString stringWithFormat:@"%@%s", addressString, ", "];
+//                                    addressString = addressString + pm.country! + ", "
+                                }
+                                if (pm.postalCode != nil) {
+                                    addressString = [NSString stringWithFormat:@"%@%@", addressString, pm.postalCode];
+                                    
+//                                    addressString = addressString + pm.postalCode! + " "
+                                }
+
+
+                                result(addressString);
+                          }
+                    
+//            if (@available(iOS 11.0, *)) {
+//                result(placemarks.firstObject);
+//            } else {
+//                result(@"");
+//            }
+        }
+                          failure:^(NSString * _Nonnull errorCode, NSString * _Nonnull errorDescription) {
+            result([FlutterError errorWithCode:errorCode
+                                       message:errorDescription
+                                       details:nil]);
+        }];
     }else {
         result(FlutterMethodNotImplemented);
     }
